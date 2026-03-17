@@ -23,7 +23,7 @@ export default function Dashboard() {
     search: '',
     states: [],
     minAcres: 200,
-    maxAcres: 10000,
+    maxAcres: 600,
     minPrice: 0,
     maxPrice: 0,
     sortBy: 'date_newest',

@@ -67,6 +67,7 @@ function extractFromHtml(
 
   // Strategy 1: Property cards (common patterns across sites)
   const cardSelectors = [
+    '[data-testid="placards"] > div',
     '[data-testid="property-card"]',
     '.property-card',
     '.listing-card',
@@ -260,7 +261,7 @@ function extractFromHtml(
 function proxyUrl(url: string): string {
   const apiKey = process.env.SCRAPER_API_KEY;
   if (!apiKey) return url;
-  return `http://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(url)}&render=true`;
+  return `http://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(url)}`;
 }
 
 async function fetchAndParse(
@@ -273,7 +274,7 @@ async function fetchAndParse(
     const fetchUrl = proxyUrl(url);
     const res = await fetch(fetchUrl, {
       headers: process.env.SCRAPER_API_KEY ? {} : HEADERS,
-      signal: AbortSignal.timeout(30000),
+      signal: AbortSignal.timeout(60000),
     });
     if (!res.ok) {
       console.log(`[${source}] ${state}: HTTP ${res.status}`);
@@ -293,12 +294,12 @@ async function fetchAndParse(
 
 export async function scrapeLandWatch(state: string): Promise<FarmListing[]> {
   const slug = state.toLowerCase().replace(/\s+/g, '-');
-  const url = `https://www.landwatch.com/${slug}-farms-ranches-for-sale/200-plus-acres`;
+  const url = `https://www.landwatch.com/${slug}-land-for-sale/farms-ranches`;
   return fetchAndParse(url, 'LandWatch', state, 'https://www.landwatch.com');
 }
 
 export async function scrapeLandAndFarm(state: string): Promise<FarmListing[]> {
-  const slug = state.toLowerCase().replace(/\s+/g, '-');
+  const slug = state.replace(/\s+/g, '-');
   const url = `https://www.landandfarm.com/search/${slug}/farms-for-sale/?MinAcreage=200`;
   return fetchAndParse(url, 'Land & Farm', state, 'https://www.landandfarm.com');
 }
@@ -311,7 +312,7 @@ export async function scrapeUnitedCountry(state: string): Promise<FarmListing[]>
 
 export async function scrapeLandCom(state: string): Promise<FarmListing[]> {
   const slug = state.replace(/\s+/g, '-');
-  const url = `https://www.land.com/farms/${slug}/200-plus-acres/`;
+  const url = `https://www.land.com/${slug}/farms/200-plus-acres/`;
   return fetchAndParse(url, 'Land.com', state, 'https://www.land.com');
 }
 
