@@ -44,7 +44,7 @@ export default function ListingCard({ listing }: { listing: FarmListing }) {
         )}
         {/* Price badge */}
         <div className="absolute top-3 left-3 bg-green-700 text-white px-3 py-1 rounded-lg font-bold text-sm shadow">
-          {listing.price > 0 ? formatPrice(listing.price) : 'Contact for Price'}
+          {listing.price > 0 ? formatPrice(listing.price) : 'Price Not Listed'}
         </div>
         {/* Price drop badge */}
         {lastPriceChange && lastPriceChange.change < 0 && (

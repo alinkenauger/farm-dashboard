@@ -13,8 +13,12 @@ function generateId(source: string, key: string): string {
 }
 
 function parsePrice(text: string): number {
-  const match = text.replace(/,/g, '').match(/\$?([\d.]+)/);
-  return match ? parseFloat(match[1]) : 0;
+  // Try to match price with $ sign first (more reliable in mixed text)
+  const dollarMatch = text.replace(/,/g, '').match(/\$([\d.]+)/);
+  if (dollarMatch) return parseFloat(dollarMatch[1]);
+  // Fallback: bare number (for structured data)
+  const bareMatch = text.replace(/,/g, '').match(/([\d.]+)/);
+  return bareMatch ? parseFloat(bareMatch[1]) : 0;
 }
 
 function parseAcreage(text: string): number {
