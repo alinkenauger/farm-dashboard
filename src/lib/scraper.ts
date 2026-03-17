@@ -322,25 +322,22 @@ export async function scrapeAllStates(): Promise<FarmListing[]> {
   const states = Object.keys(STATE_ABBREVIATIONS);
   const allListings: FarmListing[] = [];
 
+  // Build all scrape tasks across all states
+  const tasks: Promise<FarmListing[]>[] = [];
   for (const state of states) {
-    console.log(`\n=== Scraping ${state} ===`);
+    console.log(`Queuing ${state}...`);
+    tasks.push(scrapeLandWatch(state));
+    tasks.push(scrapeLandAndFarm(state));
+    tasks.push(scrapeUnitedCountry(state));
+    tasks.push(scrapeLandCom(state));
+  }
 
-    // Run all four sources in parallel per state
-    const results = await Promise.allSettled([
-      scrapeLandWatch(state),
-      scrapeLandAndFarm(state),
-      scrapeUnitedCountry(state),
-      scrapeLandCom(state),
-    ]);
-
-    for (const result of results) {
-      if (result.status === 'fulfilled') {
-        allListings.push(...result.value);
-      }
+  // Run all in parallel (ScraperAPI handles concurrency)
+  const results = await Promise.allSettled(tasks);
+  for (const result of results) {
+    if (result.status === 'fulfilled') {
+      allListings.push(...result.value);
     }
-
-    // Brief pause between states
-    await new Promise((resolve) => setTimeout(resolve, 500));
   }
 
   // Deduplicate by similar address + acreage
