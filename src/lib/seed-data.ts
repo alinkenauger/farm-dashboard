@@ -22,7 +22,7 @@ export const seedListings: FarmListing[] = [
     description:
       'Beautiful 350-acre horse farm in the heart of Bluegrass Country. Features a 4-bedroom colonial home, 3 barns, and extensive fencing. Over 60% improved pasture with year-round creek. Perfect for cattle or equine operations.',
     imageUrl: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&h=400&fit=crop',
-    listingUrl: 'https://www.landwatch.com/fayette-county-kentucky-farms-and-ranches-for-sale/pid/example1',
+    listingUrl: 'https://www.landwatch.com/fayette-county-kentucky-farms-and-ranches-for-sale',
     source: 'LandWatch',
     hasHouse: true,
     pasturePercent: 60,
@@ -44,7 +44,7 @@ export const seedListings: FarmListing[] = [
     description:
       '480 acres of prime Kentucky farmland near the Bourbon Trail. 3,200 sq ft brick home with wrap-around porch. 70% open pasture, spring-fed ponds, excellent fencing. Barn complex with livestock handling facilities.',
     imageUrl: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=600&h=400&fit=crop',
-    listingUrl: 'https://www.landwatch.com/nelson-county-kentucky-farms-and-ranches-for-sale/pid/example2',
+    listingUrl: 'https://www.landwatch.com/nelson-county-kentucky-farms-and-ranches-for-sale',
     source: 'LandWatch',
     hasHouse: true,
     pasturePercent: 70,
@@ -69,7 +69,7 @@ export const seedListings: FarmListing[] = [
     description:
       '320 acres in the Ozarks with gentle rolling terrain. Updated 3-bed ranch home. 55% improved fescue pasture, balance in mixed hardwoods. 2 ponds, year-round spring. Cattle-ready with working corrals and hay barn.',
     imageUrl: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=600&h=400&fit=crop',
-    listingUrl: 'https://www.landwatch.com/greene-county-missouri-farms-and-ranches-for-sale/pid/example3',
+    listingUrl: 'https://www.landwatch.com/greene-county-missouri-farms-and-ranches-for-sale',
     source: 'LandWatch',
     hasHouse: true,
     pasturePercent: 55,
@@ -91,7 +91,7 @@ export const seedListings: FarmListing[] = [
     description:
       'Expansive 550-acre cattle operation in SW Missouri. Custom-built 4-bed home with metal roof. 65% open pasture cross-fenced into 8 paddocks. 3 ponds, live creek, mature trees for shade. Complete working facilities.',
     imageUrl: 'https://images.unsplash.com/photo-1516253593875-bd7ba052b2be?w=600&h=400&fit=crop',
-    listingUrl: 'https://www.landwatch.com/jasper-county-missouri-farms-and-ranches-for-sale/pid/example4',
+    listingUrl: 'https://www.land.com/farms/Missouri/jasper-county/',
     source: 'Land.com',
     hasHouse: true,
     pasturePercent: 65,
@@ -113,7 +113,7 @@ export const seedListings: FarmListing[] = [
     description:
       '275 acres near the White River in northern Arkansas. Charming 3-bed farmhouse with updated kitchen. 50% open pasture, balance in oak and hickory timber. Great hunting and fishing property with livestock potential.',
     imageUrl: 'https://images.unsplash.com/photo-1595815771614-ade9d652a65d?w=600&h=400&fit=crop',
-    listingUrl: 'https://www.landwatch.com/baxter-county-arkansas-farms-and-ranches-for-sale/pid/example5',
+    listingUrl: 'https://www.landwatch.com/baxter-county-arkansas-farms-and-ranches-for-sale',
     source: 'LandWatch',
     hasHouse: true,
     pasturePercent: 50,
@@ -139,7 +139,7 @@ export const seedListings: FarmListing[] = [
     description:
       '400-acre Ozark farm with stunning mountain views. Renovated 4-bed farmhouse. 55% native grass pasture, 3 spring-fed ponds, seasonal creek. Barn, equipment shed, and cattle handling facilities. Two price reductions - motivated seller.',
     imageUrl: 'https://images.unsplash.com/photo-1500076656116-558758c991c1?w=600&h=400&fit=crop',
-    listingUrl: 'https://www.landwatch.com/boone-county-arkansas-farms-and-ranches-for-sale/pid/example6',
+    listingUrl: 'https://www.landwatch.com/boone-county-arkansas-farms-and-ranches-for-sale',
     source: 'LandWatch',
     hasHouse: true,
     pasturePercent: 55,
@@ -161,7 +161,7 @@ export const seedListings: FarmListing[] = [
     description:
       '240 acres in southern Illinois. Well-maintained brick ranch home. 60% tillable/pasture land, 40% hardwood timber. Two barns, machine shed. Road frontage on two sides. Ideal for row crops or livestock.',
     imageUrl: 'https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?w=600&h=400&fit=crop',
-    listingUrl: 'https://www.landwatch.com/jackson-county-illinois-farms-and-ranches-for-sale/pid/example7',
+    listingUrl: 'https://www.land.com/farms/Illinois/jackson-county/',
     source: 'Land.com',
     hasHouse: true,
     pasturePercent: 60,
@@ -183,7 +183,7 @@ export const seedListings: FarmListing[] = [
     description:
       '310 acres on the Cumberland Plateau. Custom log home with 5 bedrooms and stone fireplace. 55% open pasture with stunning mountain views. Multiple springs, 2 ponds. Guest cabin, horse barn, and hay storage.',
     imageUrl: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=600&h=400&fit=crop',
-    listingUrl: 'https://www.landwatch.com/cumberland-county-tennessee-farms-and-ranches-for-sale/pid/example8',
+    listingUrl: 'https://www.landwatch.com/cumberland-county-tennessee-farms-and-ranches-for-sale',
     source: 'LandWatch',
     hasHouse: true,
     pasturePercent: 55,
@@ -208,7 +208,7 @@ export const seedListings: FarmListing[] = [
     description:
       '450 acres of prime Tennessee cattle country. 4-bed farmhouse with recent updates. 65% improved pasture with bermuda and fescue. Year-round creek, 4 ponds. Complete cattle operation with handling facility, barns, and hay storage.',
     imageUrl: 'https://images.unsplash.com/photo-1560493676-04071c5f467b?w=600&h=400&fit=crop',
-    listingUrl: 'https://www.landwatch.com/putnam-county-tennessee-farms-and-ranches-for-sale/pid/example9',
+    listingUrl: 'https://www.landwatch.com/putnam-county-tennessee-farms-and-ranches-for-sale',
     source: 'LandWatch',
     hasHouse: true,
     pasturePercent: 65,
@@ -230,7 +230,7 @@ export const seedListings: FarmListing[] = [
     description:
       '600-acre historic plantation property. Restored antebellum home with 5 bedrooms. 70% open pasture and hay fields. Multiple outbuildings including equipment barn and tenant house. Rich bottomland soil, year-round creek.',
     imageUrl: 'https://images.unsplash.com/photo-1444858291040-58f756a3bdd6?w=600&h=400&fit=crop',
-    listingUrl: 'https://www.landwatch.com/lowndes-county-mississippi-farms-and-ranches-for-sale/pid/example10',
+    listingUrl: 'https://www.landwatch.com/lowndes-county-mississippi-farms-and-ranches-for-sale',
     source: 'LandWatch',
     hasHouse: true,
     pasturePercent: 70,
@@ -252,7 +252,7 @@ export const seedListings: FarmListing[] = [
     description:
       '280 acres in north Alabama with gentle rolling hills. 3-bed brick ranch home. 55% bermuda grass pasture, 2 hay fields, balance in timber. 3 ponds, 2 barns. Great for cattle or hay operation. Low taxes.',
     imageUrl: 'https://images.unsplash.com/photo-1559704842-fb76d2e8bc6e?w=600&h=400&fit=crop',
-    listingUrl: 'https://www.landwatch.com/cullman-county-alabama-farms-and-ranches-for-sale/pid/example11',
+    listingUrl: 'https://www.landwatch.com/cullman-county-alabama-farms-and-ranches-for-sale',
     source: 'LandWatch',
     hasHouse: true,
     pasturePercent: 55,
@@ -278,7 +278,7 @@ export const seedListings: FarmListing[] = [
     description:
       '520 acres in Alabama Black Belt region - some of the richest soil in the Southeast. 4-bed home needs updating. 60% open pasture and hayfields. Multiple equipment buildings. Incredible value - multiple price reductions.',
     imageUrl: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&h=400&fit=crop&q=80',
-    listingUrl: 'https://www.landwatch.com/dallas-county-alabama-farms-and-ranches-for-sale/pid/example12',
+    listingUrl: 'https://www.land.com/farms/Alabama/dallas-county/',
     source: 'Land.com',
     hasHouse: true,
     pasturePercent: 60,
@@ -300,7 +300,7 @@ export const seedListings: FarmListing[] = [
     description:
       '350 acres in middle Georgia. Custom 4-bed home built in 2018. 60% improved bermuda pasture, cross-fenced into 6 paddocks. 4 ponds, equipment barn, 6-stall horse barn. Minutes from I-75. Turnkey cattle operation.',
     imageUrl: 'https://images.unsplash.com/photo-1504281623782-f4a94d13d133?w=600&h=400&fit=crop',
-    listingUrl: 'https://www.landwatch.com/bibb-county-georgia-farms-and-ranches-for-sale/pid/example13',
+    listingUrl: 'https://www.landwatch.com/bibb-county-georgia-farms-and-ranches-for-sale',
     source: 'LandWatch',
     hasHouse: true,
     pasturePercent: 60,
@@ -325,7 +325,7 @@ export const seedListings: FarmListing[] = [
     description:
       'Stunning 700-acre south Georgia plantation. Main house with 5 bedrooms plus guest cottage. 50% open pasture and hay, 50% pine plantation (20 years old). Quail habitat, 3 dove fields. Income-producing timber. 2 ponds, live creek.',
     imageUrl: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600&h=400&fit=crop',
-    listingUrl: 'https://www.landwatch.com/lowndes-county-georgia-farms-and-ranches-for-sale/pid/example14',
+    listingUrl: 'https://www.landwatch.com/lowndes-county-georgia-farms-and-ranches-for-sale',
     source: 'LandWatch',
     hasHouse: true,
     pasturePercent: 50,
@@ -347,7 +347,7 @@ export const seedListings: FarmListing[] = [
     description:
       '250 acres in horse country near Aiken. Beautiful 4-bed colonial with pool. 55% improved pasture, excellent fencing. 5-stall barn with tack room, hay storage. Riding trails through wooded areas. Equestrian paradise.',
     imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=600&h=400&fit=crop',
-    listingUrl: 'https://www.landwatch.com/aiken-county-south-carolina-farms-and-ranches-for-sale/pid/example15',
+    listingUrl: 'https://www.landwatch.com/aiken-county-south-carolina-farms-and-ranches-for-sale',
     source: 'LandWatch',
     hasHouse: true,
     pasturePercent: 55,
@@ -369,7 +369,7 @@ export const seedListings: FarmListing[] = [
     description:
       '300 acres in Ocala horse country. Stunning 5-bed estate home. 70% improved bahia grass pasture with board fencing. 12-stall center-aisle barn, covered arena, round pen. Multiple paddocks with auto waterers. World-class equestrian facility.',
     imageUrl: 'https://images.unsplash.com/photo-1553264920-3f5d1d461c31?w=600&h=400&fit=crop',
-    listingUrl: 'https://www.landwatch.com/marion-county-florida-farms-and-ranches-for-sale/pid/example16',
+    listingUrl: 'https://www.landwatch.com/marion-county-florida-farms-and-ranches-for-sale',
     source: 'LandWatch',
     hasHouse: true,
     pasturePercent: 70,
@@ -394,7 +394,7 @@ export const seedListings: FarmListing[] = [
     description:
       '450-acre north Florida cattle ranch. Updated 3-bed ranch home. 65% improved pasture, cross-fenced. Working cattle pens, 2 hay barns, equipment storage. 3 deep wells, multiple ponds. Year-round grazing. Agricultural tax exemption in place.',
     imageUrl: 'https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=600&h=400&fit=crop',
-    listingUrl: 'https://www.landwatch.com/columbia-county-florida-farms-and-ranches-for-sale/pid/example17',
+    listingUrl: 'https://www.land.com/farms/Florida/columbia-county/',
     source: 'Land.com',
     hasHouse: true,
     pasturePercent: 65,
@@ -416,7 +416,7 @@ export const seedListings: FarmListing[] = [
     description:
       '220 acres near Bowling Green with Green River frontage. 3-bed updated farmhouse. 50% pasture with fescue and clover mix. Excellent water access for livestock. Hay barn, equipment shed. Great starter farm at an affordable price.',
     imageUrl: 'https://images.unsplash.com/photo-1472396961693-142e6e269027?w=600&h=400&fit=crop',
-    listingUrl: 'https://www.landwatch.com/warren-county-kentucky-farms-and-ranches-for-sale/pid/example18',
+    listingUrl: 'https://www.landwatch.com/warren-county-kentucky-farms-and-ranches-for-sale',
     source: 'LandWatch',
     hasHouse: true,
     pasturePercent: 50,
@@ -438,7 +438,7 @@ export const seedListings: FarmListing[] = [
     description:
       '380 acres in scenic Warren County. Beautiful stone and cedar home with 4 bedrooms. 55% open pasture with exceptional views. Natural springs, cave, and 2 ponds. 3 barns for hay and equipment. Private yet accessible.',
     imageUrl: 'https://images.unsplash.com/photo-1570023695785-79abcafe1450?w=600&h=400&fit=crop',
-    listingUrl: 'https://www.landwatch.com/warren-county-tennessee-farms-and-ranches-for-sale/pid/example19',
+    listingUrl: 'https://www.landwatch.com/warren-county-tennessee-farms-and-ranches-for-sale',
     source: 'LandWatch',
     hasHouse: true,
     pasturePercent: 55,
@@ -464,7 +464,7 @@ export const seedListings: FarmListing[] = [
     description:
       'Full section - 640 acres in the heart of the Ozarks. Solid 3-bed ranch home. 50% open pasture with native grasses, 50% mixed hardwood timber. Multiple springs, 5 ponds. Working cattle ranch with corrals. Three price reductions.',
     imageUrl: 'https://images.unsplash.com/photo-1543459176-4426b37223ba?w=600&h=400&fit=crop',
-    listingUrl: 'https://www.landwatch.com/douglas-county-missouri-farms-and-ranches-for-sale/pid/example20',
+    listingUrl: 'https://www.landwatch.com/douglas-county-missouri-farms-and-ranches-for-sale',
     source: 'LandWatch',
     hasHouse: true,
     pasturePercent: 50,
@@ -486,7 +486,7 @@ export const seedListings: FarmListing[] = [
     description:
       '310 acres of gently rolling bluegrass pasture near Richmond. 4-bed brick home with finished basement. 65% improved pasture with automatic waterers. 40x60 metal barn, hay storage, and cattle working pens. Fenced and cross-fenced.',
     imageUrl: 'https://images.unsplash.com/photo-1495107334309-fcf20504a5ab?w=600&h=400&fit=crop',
-    listingUrl: 'https://www.landandfarm.com/property/bluegrass-meadow-farm-example1',
+    listingUrl: 'https://www.landandfarm.com/search/kentucky/farms-for-sale/?MinAcreage=200',
     source: 'Land & Farm',
     hasHouse: true,
     pasturePercent: 65,
@@ -511,7 +511,7 @@ export const seedListings: FarmListing[] = [
     description:
       '500 acres of productive cattle country along the White River. 3-bed log home. 60% open bermuda and fescue pasture with excellent fencing. 2 large barns, working pens, and hay rings. 4 ponds and river access. Recent price reduction.',
     imageUrl: 'https://images.unsplash.com/photo-1510076857177-7470076d4098?w=600&h=400&fit=crop',
-    listingUrl: 'https://farms.unitedcountry.com/property/river-bottom-ranch-example1',
+    listingUrl: 'https://www.unitedcountry.com/Farms-Ranches/Arkansas.htm',
     source: 'United Country',
     hasHouse: true,
     pasturePercent: 60,
@@ -533,7 +533,7 @@ export const seedListings: FarmListing[] = [
     description:
       '290 acres on the Cumberland Plateau. Updated 3-bed farmhouse with metal roof. 55% native grass pasture, 2 spring-fed ponds, seasonal creek. Equipment barn, cattle chute, and round pen. Quiet and private with paved road access.',
     imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop',
-    listingUrl: 'https://www.land.com/farms/tennessee/white-county/example1',
+    listingUrl: 'https://www.land.com/farms/Tennessee/200-plus-acres/',
     source: 'Land.com',
     hasHouse: true,
     pasturePercent: 55,
@@ -555,7 +555,7 @@ export const seedListings: FarmListing[] = [
     description:
       '420 acres in Georgia Piedmont region. Classic 4-bed farmhouse with wraparound porch. 60% improved bermuda pasture, cross-fenced for rotational grazing. 2 hay barns, equipment shed, and cattle handling facility. 3 ponds with good fish populations.',
     imageUrl: 'https://images.unsplash.com/photo-1498036882173-b41c28a8ba34?w=600&h=400&fit=crop',
-    listingUrl: 'https://farms.unitedcountry.com/property/piedmont-cattle-ranch-example1',
+    listingUrl: 'https://www.unitedcountry.com/Farms-Ranches/Georgia.htm',
     source: 'United Country',
     hasHouse: true,
     pasturePercent: 60,
@@ -580,7 +580,7 @@ export const seedListings: FarmListing[] = [
     description:
       '350 acres in south Mississippi with mix of pasture and timber. 3-bed ranch home with recent renovation. 50% open bahia grass pasture, 50% pine plantation. 2 ponds, equipment barn, and hay storage. Low taxes and great value.',
     imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=400&fit=crop',
-    listingUrl: 'https://www.landandfarm.com/property/pine-belt-farm-example1',
+    listingUrl: 'https://www.landandfarm.com/search/mississippi/farms-for-sale/?MinAcreage=200',
     source: 'Land & Farm',
     hasHouse: true,
     pasturePercent: 50,
@@ -602,7 +602,7 @@ export const seedListings: FarmListing[] = [
     description:
       '260 acres in scenic southern Illinois. 4-bed Cape Cod home with attached garage. 55% tillable and pasture, balance in hardwood timber. 2 ponds, seasonal creek. 50x80 metal barn. Excellent soil for hay production or row crops.',
     imageUrl: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=600&h=400&fit=crop',
-    listingUrl: 'https://www.land.com/farms/illinois/williamson-county/example1',
+    listingUrl: 'https://www.land.com/farms/Illinois/200-plus-acres/',
     source: 'Land.com',
     hasHouse: true,
     pasturePercent: 55,
@@ -624,7 +624,7 @@ export const seedListings: FarmListing[] = [
     description:
       '330 acres in upstate South Carolina. Renovated 3-bed farmhouse with new HVAC and roof. 55% open pasture, balance in mixed hardwood and pine. 3 ponds, live creek, and excellent hunting. 2 barns and equipment shed. Ag tax assessment.',
     imageUrl: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=600&h=400&fit=crop&q=80',
-    listingUrl: 'https://farms.unitedcountry.com/property/upstate-heritage-farm-example1',
+    listingUrl: 'https://www.unitedcountry.com/Farms-Ranches/South-Carolina.htm',
     source: 'United Country',
     hasHouse: true,
     pasturePercent: 55,
@@ -649,7 +649,7 @@ export const seedListings: FarmListing[] = [
     description:
       '375 acres in the Tennessee Valley of north Alabama. 3-bed brick home with workshop. 60% improved fescue and bermuda pasture. 3 ponds, 2 barns, and cattle working facilities. Fertile bottomland along the Flint River. Price reduced.',
     imageUrl: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&h=400&fit=crop&q=90',
-    listingUrl: 'https://www.landandfarm.com/property/tennessee-valley-farm-example1',
+    listingUrl: 'https://www.landandfarm.com/search/alabama/farms-for-sale/?MinAcreage=200',
     source: 'Land & Farm',
     hasHouse: true,
     pasturePercent: 60,
@@ -671,7 +671,7 @@ export const seedListings: FarmListing[] = [
     description:
       '380 acres along the Suwannee River in north Florida. Custom 4-bed home built in 2020. 65% improved bahia grass pasture with board fencing. 8-stall barn, equipment shed, cattle pens. Agricultural exemption in place. Year-round grazing climate.',
     imageUrl: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=600&h=400&fit=crop',
-    listingUrl: 'https://www.land.com/farms/florida/suwannee-county/example1',
+    listingUrl: 'https://www.land.com/farms/Florida/200-plus-acres/',
     source: 'Land.com',
     hasHouse: true,
     pasturePercent: 65,
@@ -697,7 +697,7 @@ export const seedListings: FarmListing[] = [
     description:
       '480 acres near Mark Twain National Forest. Solid 4-bed ranch home. 50% open pasture with native grasses, balance in oak and cedar timber. 6 springs, 3 ponds, year-round creek. Complete cattle operation. Multiple price reductions - great opportunity.',
     imageUrl: 'https://images.unsplash.com/photo-1504457047772-27faf04c0607?w=600&h=400&fit=crop',
-    listingUrl: 'https://farms.unitedcountry.com/property/mark-twain-forest-ranch-example1',
+    listingUrl: 'https://www.unitedcountry.com/Farms-Ranches/Missouri.htm',
     source: 'United Country',
     hasHouse: true,
     pasturePercent: 50,
