@@ -257,6 +257,12 @@ function extractFromHtml(
   return listings;
 }
 
+function proxyUrl(url: string): string {
+  const apiKey = process.env.SCRAPER_API_KEY;
+  if (!apiKey) return url;
+  return `http://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(url)}&render=true`;
+}
+
 async function fetchAndParse(
   url: string,
   source: string,
@@ -264,7 +270,11 @@ async function fetchAndParse(
   baseUrl: string
 ): Promise<FarmListing[]> {
   try {
-    const res = await fetch(url, { headers: HEADERS, next: { revalidate: 0 } });
+    const fetchUrl = proxyUrl(url);
+    const res = await fetch(fetchUrl, {
+      headers: process.env.SCRAPER_API_KEY ? {} : HEADERS,
+      signal: AbortSignal.timeout(30000),
+    });
     if (!res.ok) {
       console.log(`[${source}] ${state}: HTTP ${res.status}`);
       return [];

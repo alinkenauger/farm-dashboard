@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { scrapeAllStates } from '@/lib/scraper';
-import { seedListings } from '@/lib/seed-data';
 import { FarmListing } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
 // Simple in-memory cache
-let cachedListings: FarmListing[] | null = null;
+let cachedListings: FarmListing[] = [];
 let cacheTime = 0;
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
@@ -15,8 +14,8 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const refresh = searchParams.get('refresh') === 'true';
 
-  // Return cached if fresh
-  if (cachedListings && !refresh && Date.now() - cacheTime < CACHE_TTL) {
+  // Return cached if fresh and non-empty
+  if (cachedListings.length > 0 && !refresh && Date.now() - cacheTime < CACHE_TTL) {
     return NextResponse.json({
       listings: cachedListings,
       metadata: buildMetadata(cachedListings),
@@ -24,27 +23,18 @@ export async function GET(request: NextRequest) {
   }
 
   // Try scraping fresh data
-  if (refresh) {
+  if (refresh || cachedListings.length === 0) {
     try {
       const scraped = await scrapeAllStates();
       if (scraped.length > 0) {
-        // Merge with existing
-        cachedListings = mergeListings(cachedListings || seedListings, scraped);
+        cachedListings = cachedListings.length > 0
+          ? mergeListings(cachedListings, scraped)
+          : scraped;
         cacheTime = Date.now();
-        return NextResponse.json({
-          listings: cachedListings,
-          metadata: buildMetadata(cachedListings),
-        });
       }
     } catch (error) {
       console.error('Scrape error:', error);
     }
-  }
-
-  // Fall back to seed data
-  if (!cachedListings) {
-    cachedListings = seedListings;
-    cacheTime = Date.now();
   }
 
   return NextResponse.json({

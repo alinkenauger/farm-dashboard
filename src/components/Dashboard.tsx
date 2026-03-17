@@ -240,9 +240,18 @@ export default function Dashboard() {
             <h3 className="text-lg font-semibold text-gray-600">No Listings Found</h3>
             <p className="text-gray-400 mt-1 text-sm">
               {data?.listings?.length === 0
-                ? 'Click "Refresh" to search for farm listings.'
+                ? 'Click "Refresh" to pull the latest farm listings from across the web.'
                 : 'Try adjusting your filters to see more results.'}
             </p>
+            {data?.listings?.length === 0 && (
+              <button
+                onClick={() => fetchListings(true)}
+                disabled={refreshing}
+                className="mt-4 px-6 py-2 bg-green-700 hover:bg-green-800 disabled:bg-green-400 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                {refreshing ? 'Searching...' : 'Search for Listings'}
+              </button>
+            )}
           </div>
         )}
       </main>
