@@ -716,14 +716,18 @@ async function scrapeStateQuick(state: string): Promise<FarmListing[]> {
 export async function scrapeStates(states: string[]): Promise<FarmListing[]> {
   const allListings: FarmListing[] = [];
 
-  // Scrape all states in parallel (direct fetch is fast, no rate limit concerns)
-  console.log(`Scraping ${states.length} states in parallel...`);
-  const stateResults = await Promise.allSettled(states.map(state => scrapeStateQuick(state)));
-  for (const result of stateResults) {
-    if (result.status === 'fulfilled') {
-      allListings.push(...result.value);
-    } else {
-      console.error(`State scrape failed:`, result.reason);
+  // Scrape states in batches of 3 to avoid overwhelming connections
+  console.log(`Scraping ${states.length} states (3 at a time)...`);
+  for (let i = 0; i < states.length; i += 3) {
+    const batch = states.slice(i, i + 3);
+    console.log(`Batch ${Math.floor(i / 3) + 1}: ${batch.join(', ')}`);
+    const stateResults = await Promise.allSettled(batch.map(state => scrapeStateQuick(state)));
+    for (const result of stateResults) {
+      if (result.status === 'fulfilled') {
+        allListings.push(...result.value);
+      } else {
+        console.error(`State scrape failed:`, result.reason);
+      }
     }
   }
 
