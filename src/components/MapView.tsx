@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+import 'leaflet.markercluster';
 import { FarmListing } from '@/lib/types';
 
 const STATE_CENTERS: Record<string, [number, number]> = {
@@ -40,9 +43,8 @@ interface MapViewProps {
 export default function MapView({ listings, onSelectListing }: MapViewProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
-  const markersRef = useRef<L.Marker[]>([]);
+  const clusterGroupRef = useRef<L.MarkerClusterGroup | null>(null);
   const [tileMode, setTileMode] = useState<'street' | 'satellite'>('street');
-  const tileModeRef = useRef(tileMode);
 
   const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
@@ -81,14 +83,35 @@ export default function MapView({ listings, onSelectListing }: MapViewProps) {
     const map = mapInstanceRef.current;
     if (!map) return;
 
-    // Clear old markers
-    for (const m of markersRef.current) {
-      map.removeLayer(m);
+    // Remove old cluster group
+    if (clusterGroupRef.current) {
+      map.removeLayer(clusterGroupRef.current);
     }
-    markersRef.current = [];
 
-    // Add new markers
-    const newMarkers: L.Marker[] = [];
+    // Create new cluster group with green styling
+    const clusterGroup = (L as any).markerClusterGroup({
+      maxClusterRadius: 50,
+      spiderfyOnMaxZoom: true,
+      showCoverageOnHover: false,
+      iconCreateFunction: (cluster: any) => {
+        const count = cluster.getChildCount();
+        return L.divIcon({
+          html: `<div style="
+            background:#15803d;color:white;width:48px;height:48px;border-radius:50%;
+            display:flex;align-items:center;justify-content:center;
+            font-size:14px;font-weight:700;border:3px solid white;
+            box-shadow:0 2px 8px rgba(0,0,0,0.3);
+          ">${count}</div>`,
+          className: '',
+          iconSize: [48, 48],
+          iconAnchor: [24, 24],
+        });
+      },
+    });
+    clusterGroupRef.current = clusterGroup;
+
+    // Add markers to cluster group
+    const allMarkers: L.Marker[] = [];
     for (const listing of listings) {
       let lat = listing.lat;
       let lng = listing.lng;
@@ -97,9 +120,11 @@ export default function MapView({ listings, onSelectListing }: MapViewProps) {
       if (!lat || !lng) {
         const center = STATE_CENTERS[listing.state];
         if (!center) continue;
+        // Spread pins across the state area (~1.5 degrees = ~100 miles)
+        // Uses deterministic hash so pins don't jump on re-render
         const hash = listing.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-        lat = center[0] + ((hash % 100) / 100 - 0.5) * 0.6;
-        lng = center[1] + (((hash * 7) % 100) / 100 - 0.5) * 0.6;
+        lat = center[0] + ((hash % 100) / 100 - 0.5) * 1.5;
+        lng = center[1] + (((hash * 7) % 100) / 100 - 0.5) * 1.5;
         isApproximate = true;
       }
 
@@ -144,15 +169,15 @@ export default function MapView({ listings, onSelectListing }: MapViewProps) {
       `);
 
       marker.on('click', () => onSelectListing?.(listing));
-      marker.addTo(map);
-      newMarkers.push(marker);
+      clusterGroup.addLayer(marker);
+      allMarkers.push(marker);
     }
 
-    markersRef.current = newMarkers;
+    map.addLayer(clusterGroup);
 
     // Zoom to fit the filtered listings
-    if (newMarkers.length > 0) {
-      const group = L.featureGroup(newMarkers);
+    if (allMarkers.length > 0) {
+      const group = L.featureGroup(allMarkers);
       map.flyToBounds(group.getBounds().pad(0.1), { duration: 0.5 });
     }
   }, [listings, onSelectListing]);
