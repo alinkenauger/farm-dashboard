@@ -13,11 +13,16 @@ export interface FarmListing {
   utilities: string;
   description: string;
   imageUrl: string;
+  images: string[];
   listingUrl: string;
   source: string;
   hasHouse: boolean;
   pasturePercent: number;
   lastUpdated: string;
+  beds: number;
+  baths: number;
+  lat?: number;
+  lng?: number;
 }
 
 export interface PriceChange {
@@ -33,7 +38,7 @@ export interface FilterState {
   maxAcres: number;
   minPrice: number;
   maxPrice: number;
-  sortBy: 'price_asc' | 'price_desc' | 'acres_asc' | 'acres_desc' | 'date_newest' | 'date_oldest';
+  sortBy: 'price_asc' | 'price_desc' | 'acres_asc' | 'acres_desc' | 'date_newest' | 'date_oldest' | 'ppa_asc' | 'ppa_desc';
 }
 
 export const TARGET_STATES = [
@@ -47,6 +52,8 @@ export const TARGET_STATES = [
   'Georgia',
   'South Carolina',
   'Florida',
+  'Virginia',
+  'West Virginia',
 ] as const;
 
 export const STATE_ABBREVIATIONS: Record<string, string> = {
@@ -60,4 +67,6 @@ export const STATE_ABBREVIATIONS: Record<string, string> = {
   Georgia: 'GA',
   'South Carolina': 'SC',
   Florida: 'FL',
+  Virginia: 'VA',
+  'West Virginia': 'WV',
 };

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { FilterState, TARGET_STATES } from '@/lib/types';
 
 interface FiltersProps {
@@ -7,9 +8,61 @@ interface FiltersProps {
   onChange: (filters: FilterState) => void;
   totalCount: number;
   filteredCount: number;
+  stateBreakdown?: Record<string, number>;
 }
 
-export default function Filters({ filters, onChange, totalCount, filteredCount }: FiltersProps) {
+function formatDollar(value: number): string {
+  if (!value) return '';
+  return '$' + value.toLocaleString();
+}
+
+function parseDollarInput(raw: string): number {
+  // Strip everything except digits and decimal
+  const cleaned = raw.replace(/[^0-9.]/g, '');
+  return Math.round(parseFloat(cleaned) || 0);
+}
+
+function PriceInput({ value, onChange, placeholder }: { value: number; onChange: (v: number) => void; placeholder: string }) {
+  const [focused, setFocused] = useState(false);
+  const [rawText, setRawText] = useState('');
+
+  const handleFocus = () => {
+    setFocused(true);
+    setRawText(value ? String(value) : '');
+  };
+
+  const handleBlur = () => {
+    setFocused(false);
+    const parsed = parseDollarInput(rawText);
+    onChange(parsed);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setRawText(e.target.value);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      (e.target as HTMLInputElement).blur();
+    }
+  };
+
+  return (
+    <input
+      type="text"
+      inputMode="numeric"
+      value={focused ? rawText : formatDollar(value)}
+      onChange={handleChange}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
+      onKeyDown={handleKeyDown}
+      placeholder={placeholder}
+      className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+    />
+  );
+}
+
+export default function Filters({ filters, onChange, totalCount, filteredCount, stateBreakdown }: FiltersProps) {
   const update = (partial: Partial<FilterState>) => {
     onChange({ ...filters, ...partial });
   };
@@ -26,7 +79,7 @@ export default function Filters({ filters, onChange, totalCount, filteredCount }
       search: '',
       states: [],
       minAcres: 200,
-      maxAcres: 10000,
+      maxAcres: 600,
       minPrice: 0,
       maxPrice: 0,
       sortBy: 'date_newest',
@@ -37,7 +90,7 @@ export default function Filters({ filters, onChange, totalCount, filteredCount }
     filters.search ||
     filters.states.length > 0 ||
     filters.minAcres > 200 ||
-    filters.maxAcres < 10000 ||
+    filters.maxAcres < 600 ||
     filters.minPrice > 0 ||
     filters.maxPrice > 0;
 
@@ -78,6 +131,8 @@ export default function Filters({ filters, onChange, totalCount, filteredCount }
           <option value="price_desc">Price: High to Low</option>
           <option value="acres_asc">Acres: Low to High</option>
           <option value="acres_desc">Acres: High to Low</option>
+          <option value="ppa_asc">$/Acre: Low to High</option>
+          <option value="ppa_desc">$/Acre: High to Low</option>
         </select>
       </div>
 
@@ -87,19 +142,22 @@ export default function Filters({ filters, onChange, totalCount, filteredCount }
           Filter by State
         </label>
         <div className="flex flex-wrap gap-2">
-          {TARGET_STATES.map((state) => (
-            <button
-              key={state}
-              onClick={() => toggleState(state)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                filters.states.length === 0 || filters.states.includes(state)
-                  ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                  : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
-              }`}
-            >
-              {state}
-            </button>
-          ))}
+          {TARGET_STATES.map((state) => {
+            const count = stateBreakdown?.[state] || 0;
+            return (
+              <button
+                key={state}
+                onClick={() => toggleState(state)}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                  filters.states.length === 0 || filters.states.includes(state)
+                    ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                    : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+                }`}
+              >
+                {state}{count > 0 && ` (${count})`}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -128,27 +186,11 @@ export default function Filters({ filters, onChange, totalCount, filteredCount }
         </div>
         <div>
           <label className="block text-xs text-gray-500 mb-1">Min Price</label>
-          <input
-            type="number"
-            value={filters.minPrice || ''}
-            onChange={(e) => update({ minPrice: parseInt(e.target.value) || 0 })}
-            placeholder="No min"
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-            min={0}
-            step={50000}
-          />
+          <PriceInput value={filters.minPrice} onChange={(v) => update({ minPrice: v })} placeholder="No min" />
         </div>
         <div>
           <label className="block text-xs text-gray-500 mb-1">Max Price</label>
-          <input
-            type="number"
-            value={filters.maxPrice || ''}
-            onChange={(e) => update({ maxPrice: parseInt(e.target.value) || 0 })}
-            placeholder="No max"
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-            min={0}
-            step={50000}
-          />
+          <PriceInput value={filters.maxPrice} onChange={(v) => update({ maxPrice: v })} placeholder="No max" />
         </div>
       </div>
 

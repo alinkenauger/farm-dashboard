@@ -1,8 +1,13 @@
 import { FarmListing } from './types';
 
+// Default fields for seed data
+function seed(partial: Omit<FarmListing, 'images' | 'beds' | 'baths'> & { images?: string[]; beds?: number; baths?: number }): FarmListing {
+  return { ...partial, images: partial.images || (partial.imageUrl ? [partial.imageUrl] : []), beds: partial.beds || 0, baths: partial.baths || 0 };
+}
+
 // Seed data to ensure dashboard has listings on first load
 // These represent the type of listings found on LandWatch, Land.com, etc.
-export const seedListings: FarmListing[] = [
+const rawListings = [
   {
     id: 'ky-001',
     address: '1234 Rolling Hills Farm',
@@ -704,3 +709,5 @@ export const seedListings: FarmListing[] = [
     lastUpdated: '2026-03-17T08:00:00Z',
   },
 ];
+
+export const seedListings: FarmListing[] = rawListings.map((r: any) => seed(r));

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { FarmListing } from '@/lib/types';
 
 function formatPrice(price: number): string {
@@ -15,18 +16,49 @@ function formatDate(dateStr: string): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-export default function ListingCard({ listing }: { listing: FarmListing }) {
+function daysOnMarket(dateStr: string): number {
+  if (!dateStr) return 0;
+  const listed = new Date(dateStr).getTime();
+  const now = Date.now();
+  return Math.max(0, Math.floor((now - listed) / (1000 * 60 * 60 * 24)));
+}
+
+interface ListingCardProps {
+  listing: FarmListing;
+  isFavorite?: boolean;
+  onToggleFavorite?: (id: string) => void;
+  onCompare?: (listing: FarmListing) => void;
+}
+
+export default function ListingCard({ listing, isFavorite, onToggleFavorite, onCompare }: ListingCardProps) {
+  const [imgIndex, setImgIndex] = useState(0);
+  const allImages = listing.images?.length > 0 ? listing.images : listing.imageUrl ? [listing.imageUrl] : [];
+  const currentImage = allImages[imgIndex] || '';
+  const hasMultiple = allImages.length > 1;
+
   const lastPriceChange = listing.priceHistory.length > 1
     ? listing.priceHistory[listing.priceHistory.length - 1]
     : null;
 
+  const dom = daysOnMarket(listing.dateListed);
+
+  const handleShare = async () => {
+    const text = `${listing.address} - ${listing.acreage} acres - ${listing.price > 0 ? formatPrice(listing.price) : 'Price Not Listed'}\n${listing.listingUrl}`;
+    if (navigator.share) {
+      try { await navigator.share({ title: listing.address, text, url: listing.listingUrl }); } catch {}
+    } else {
+      await navigator.clipboard.writeText(text);
+      alert('Link copied to clipboard!');
+    }
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-      {/* Image */}
+      {/* Image carousel */}
       <div className="relative h-48 bg-gray-100">
-        {listing.imageUrl ? (
+        {currentImage ? (
           <img
-            src={listing.imageUrl}
+            src={currentImage}
             alt={listing.address}
             className="w-full h-full object-cover"
             onError={(e) => {
@@ -42,6 +74,31 @@ export default function ListingCard({ listing }: { listing: FarmListing }) {
             </svg>
           </div>
         )}
+
+        {/* Carousel arrows */}
+        {hasMultiple && (
+          <>
+            <button
+              onClick={(e) => { e.preventDefault(); setImgIndex((i) => (i - 1 + allImages.length) % allImages.length); }}
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm"
+            >
+              &lt;
+            </button>
+            <button
+              onClick={(e) => { e.preventDefault(); setImgIndex((i) => (i + 1) % allImages.length); }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm"
+            >
+              &gt;
+            </button>
+            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-1">
+              {allImages.slice(0, 5).map((_, i) => (
+                <div key={i} className={`w-1.5 h-1.5 rounded-full ${i === imgIndex ? 'bg-white' : 'bg-white/50'}`} />
+              ))}
+              {allImages.length > 5 && <span className="text-white text-[10px] ml-1">+{allImages.length - 5}</span>}
+            </div>
+          </>
+        )}
+
         {/* Price badge */}
         <div className="absolute top-3 left-3 bg-green-700 text-white px-3 py-1 rounded-lg font-bold text-sm shadow">
           {listing.price > 0 ? formatPrice(listing.price) : 'Price Not Listed'}
@@ -55,9 +112,34 @@ export default function ListingCard({ listing }: { listing: FarmListing }) {
             Price Drop: {formatPrice(Math.abs(lastPriceChange.change))}
           </div>
         )}
-        {/* Source badge */}
-        <div className="absolute bottom-3 right-3 bg-black/60 text-white px-2 py-0.5 rounded text-xs">
-          {listing.source}
+        {/* Source + DOM badges */}
+        <div className="absolute bottom-3 right-3 flex items-center gap-1.5">
+          {dom > 0 && (
+            <span className="bg-black/60 text-white px-2 py-0.5 rounded text-xs">{dom}d on market</span>
+          )}
+          <span className="bg-black/60 text-white px-2 py-0.5 rounded text-xs">{listing.source}</span>
+        </div>
+
+        {/* Favorite + Share buttons */}
+        <div className="absolute bottom-3 left-3 flex items-center gap-1.5">
+          {onToggleFavorite && (
+            <button
+              onClick={(e) => { e.preventDefault(); onToggleFavorite(listing.id); }}
+              className="bg-white/90 hover:bg-white p-1.5 rounded-full shadow"
+            >
+              <svg className={`w-4 h-4 ${isFavorite ? 'text-red-500 fill-red-500' : 'text-gray-500'}`} fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </button>
+          )}
+          <button
+            onClick={(e) => { e.preventDefault(); handleShare(); }}
+            className="bg-white/90 hover:bg-white p-1.5 rounded-full shadow"
+          >
+            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -90,13 +172,12 @@ export default function ListingCard({ listing }: { listing: FarmListing }) {
             <div className="text-blue-600 text-xs">Per Acre</div>
           </div>
           <div className="bg-amber-50 rounded-lg p-2 text-center">
-            <div className="text-amber-800 font-bold text-sm flex items-center justify-center gap-0.5">
-              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-              </svg>
-              Yes
+            <div className="text-amber-800 font-bold text-sm">
+              {listing.beds > 0 || listing.baths > 0
+                ? `${listing.beds}bd/${listing.baths}ba`
+                : 'Yes'}
             </div>
-            <div className="text-amber-600 text-xs">House</div>
+            <div className="text-amber-600 text-xs">{listing.beds > 0 || listing.baths > 0 ? 'Bed/Bath' : 'House'}</div>
           </div>
         </div>
 
@@ -113,6 +194,12 @@ export default function ListingCard({ listing }: { listing: FarmListing }) {
             <span>Listed</span>
             <span className="text-gray-700">{formatDate(listing.dateListed)}</span>
           </div>
+          {dom > 0 && (
+            <div className="flex justify-between">
+              <span>Days on Market</span>
+              <span className="text-gray-700">{dom}</span>
+            </div>
+          )}
           {listing.priceHistory.length > 1 && (
             <div className="flex justify-between">
               <span>Price Changes</span>
@@ -129,15 +216,28 @@ export default function ListingCard({ listing }: { listing: FarmListing }) {
           </div>
         </div>
 
-        {/* CTA */}
-        <a
-          href={listing.listingUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block w-full text-center bg-green-700 hover:bg-green-800 text-white py-2 rounded-lg text-sm font-medium transition-colors"
-        >
-          View Listing
-        </a>
+        {/* CTAs */}
+        <div className="flex gap-2">
+          <a
+            href={listing.listingUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 text-center bg-green-700 hover:bg-green-800 text-white py-2 rounded-lg text-sm font-medium transition-colors"
+          >
+            View Listing
+          </a>
+          {onCompare && (
+            <button
+              onClick={() => onCompare(listing)}
+              className="px-3 py-2 border border-gray-300 hover:border-green-500 hover:text-green-700 text-gray-600 rounded-lg text-sm transition-colors"
+              title="Compare"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
