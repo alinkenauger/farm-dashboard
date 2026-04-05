@@ -1,6 +1,6 @@
 /**
- * Property intelligence: lazy-loaded USDA soil and FEMA flood data.
- * Fetched on pin click, cached in memory for the session.
+ * Property intelligence: lazy-loaded environmental and land data.
+ * All data fetched from free government APIs on pin click.
  */
 
 export interface PropertyIntelligence {
@@ -22,9 +22,23 @@ export interface PropertyIntelligence {
     facilityNames: string[];
     status: 'loaded' | 'unavailable' | 'loading';
   };
+  toxics?: {
+    sites: { name: string; distance: string; type: string }[];
+    status: 'loaded' | 'unavailable' | 'loading';
+  };
+  broadband?: {
+    maxDown: number;
+    maxUp: number;
+    providers: string[];
+    status: 'loaded' | 'unavailable' | 'loading';
+  };
+  wetlands?: {
+    hasWetlands: boolean;
+    types: string[];
+    status: 'loaded' | 'unavailable' | 'loading';
+  };
 }
 
-// Client-side cache
 const cache = new Map<string, PropertyIntelligence>();
 
 function cacheKey(lat: number, lng: number): string {
@@ -35,10 +49,8 @@ export function getCached(lat: number, lng: number): PropertyIntelligence | unde
   return cache.get(cacheKey(lat, lng));
 }
 
-/**
- * Query USDA Soil Data Access for soil information at a point.
- * SDA uses SQL-like queries via POST.
- */
+// ---- USDA Soil ----
+
 async function fetchSoilData(lat: number, lng: number): Promise<PropertyIntelligence['soil']> {
   try {
     const query = `SELECT TOP 1 muname, drclassdcd, irrcapcl, farmlndcl
@@ -81,9 +93,8 @@ async function fetchSoilData(lat: number, lng: number): Promise<PropertyIntellig
   }
 }
 
-/**
- * Query FEMA National Flood Hazard Layer for flood zone at a point.
- */
+// ---- FEMA Flood ----
+
 async function fetchFloodData(lat: number, lng: number): Promise<PropertyIntelligence['flood']> {
   try {
     const url = `https://hazards.fema.gov/gis/nfhl/rest/services/public/NFHL/MapServer/28/query?` +
@@ -110,13 +121,10 @@ async function fetchFloodData(lat: number, lng: number): Promise<PropertyIntelli
   }
 }
 
-/**
- * Query EPA ECHO for water quality violations and facilities near a point.
- * 3-mile radius search for facilities with Clean Water Act violations.
- */
+// ---- EPA Water Quality (ECHO) ----
+
 async function fetchWaterData(lat: number, lng: number): Promise<PropertyIntelligence['water']> {
   try {
-    // EPA ECHO Facility search within 3 miles
     const url = `https://echodata.epa.gov/echo/echo_rest_services.get_facilities?output=JSON` +
       `&p_lat=${lat}&p_long=${lng}&p_radius=3` +
       `&p_med=CWA&p_qiv=VIOL&responseset=10`;
@@ -131,55 +139,124 @@ async function fetchWaterData(lat: number, lng: number): Promise<PropertyIntelli
     const facilities = results.Facilities || [];
     const facilityNames = facilities
       .slice(0, 5)
-      .map((f: any) => f.FacName || 'Unknown facility')
-      .filter((n: string) => n !== 'Unknown facility');
+      .map((f: any) => f.FacName || '')
+      .filter(Boolean);
 
     const totalViolations = facilities.reduce(
       (sum: number, f: any) => sum + (parseInt(f.CWAQtrsInNC) || 0), 0
     );
 
-    return {
-      violations: totalViolations,
-      facilities: facilities.length,
-      facilityNames,
-      status: 'loaded',
-    };
+    return { violations: totalViolations, facilities: facilities.length, facilityNames, status: 'loaded' };
   } catch {
     return { violations: 0, facilities: 0, facilityNames: [], status: 'unavailable' };
   }
 }
 
-/**
- * Fetch all property intelligence for a location. Returns cached data if available.
- */
+// ---- EPA Toxic Releases / Superfund (Envirofacts TRI + Superfund) ----
+
+async function fetchToxicData(lat: number, lng: number): Promise<PropertyIntelligence['toxics']> {
+  try {
+    // EPA Envirofacts TRI facilities within ~5 mile radius
+    // Using the SEMS (Superfund) and TRI APIs
+    const triUrl = `https://data.epa.gov/efservice/TRI_FACILITY/PREF_LATITUDE/${(lat - 0.07).toFixed(4)}/${(lat + 0.07).toFixed(4)}/PREF_LONGITUDE/${(lng - 0.07).toFixed(4)}/${(lng + 0.07).toFixed(4)}/JSON/rows/0:10`;
+
+    const res = await fetch(triUrl, { signal: AbortSignal.timeout(10000) });
+    if (!res.ok) return { sites: [], status: 'unavailable' };
+
+    const data = await res.json();
+    const sites = (Array.isArray(data) ? data : []).slice(0, 5).map((f: any) => ({
+      name: f.FACILITY_NAME || f.FAC_NAME || 'Unknown',
+      distance: `${((Math.abs(f.PREF_LATITUDE - lat) + Math.abs(f.PREF_LONGITUDE - lng)) * 69).toFixed(1)} mi`,
+      type: 'Toxic Release Inventory',
+    }));
+
+    return { sites, status: 'loaded' };
+  } catch {
+    return { sites: [], status: 'unavailable' };
+  }
+}
+
+// ---- FCC Broadband ----
+
+async function fetchBroadbandData(lat: number, lng: number): Promise<PropertyIntelligence['broadband']> {
+  try {
+    // FCC Broadband Map API
+    const url = `https://broadbandmap.fcc.gov/api/public/map/listAvailableFixedProvidersByLocation?latitude=${lat}&longitude=${lng}&speed_category=25_3`;
+
+    const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+    if (!res.ok) return { maxDown: 0, maxUp: 0, providers: [], status: 'unavailable' };
+
+    const data = await res.json();
+    const providers = (data?.data || []).map((p: any) => p.brand_name || p.provider_name || '').filter(Boolean);
+    const maxDown = Math.max(0, ...(data?.data || []).map((p: any) => p.max_advertised_downstream_speed || 0));
+    const maxUp = Math.max(0, ...(data?.data || []).map((p: any) => p.max_advertised_upstream_speed || 0));
+
+    return {
+      maxDown,
+      maxUp,
+      providers: [...new Set(providers)].slice(0, 5) as string[],
+      status: 'loaded',
+    };
+  } catch {
+    return { maxDown: 0, maxUp: 0, providers: [], status: 'unavailable' };
+  }
+}
+
+// ---- USFWS Wetlands ----
+
+async function fetchWetlandsData(lat: number, lng: number): Promise<PropertyIntelligence['wetlands']> {
+  try {
+    // National Wetlands Inventory via ArcGIS
+    const url = `https://www.fws.gov/wetlands/arcgis/rest/services/Wetlands/MapServer/0/query?` +
+      `geometry=${lng},${lat}&geometryType=esriGeometryPoint&spatialRel=esriSpatialRelIntersects` +
+      `&outFields=WETLAND_TYPE,ATTRIBUTE&f=json&inSR=4326&outSR=4326`;
+
+    const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+    if (!res.ok) return { hasWetlands: false, types: [], status: 'unavailable' };
+
+    const data = await res.json();
+    const features = data?.features || [];
+    const types = [...new Set(features.map((f: any) => f.attributes?.WETLAND_TYPE || '').filter(Boolean))] as string[];
+
+    return { hasWetlands: features.length > 0, types, status: 'loaded' };
+  } catch {
+    return { hasWetlands: false, types: [], status: 'unavailable' };
+  }
+}
+
+// ---- Orchestrator ----
+
 export async function fetchPropertyIntelligence(lat: number, lng: number): Promise<PropertyIntelligence> {
   const key = cacheKey(lat, lng);
   const existing = cache.get(key);
   if (existing && existing.soil?.status !== 'loading') return existing;
 
-  // Set loading state
   const loading: PropertyIntelligence = {
     soil: { name: '', drainageClass: '', capabilityClass: '', farmlandClass: '', status: 'loading' },
     flood: { zone: '', zoneSubtype: '', status: 'loading' },
     water: { violations: 0, facilities: 0, facilityNames: [], status: 'loading' },
+    toxics: { sites: [], status: 'loading' },
+    broadband: { maxDown: 0, maxUp: 0, providers: [], status: 'loading' },
+    wetlands: { hasWetlands: false, types: [], status: 'loading' },
   };
   cache.set(key, loading);
 
-  // Fetch in parallel
-  const [soil, flood, water] = await Promise.all([
+  const [soil, flood, water, toxics, broadband, wetlands] = await Promise.all([
     fetchSoilData(lat, lng),
     fetchFloodData(lat, lng),
     fetchWaterData(lat, lng),
+    fetchToxicData(lat, lng),
+    fetchBroadbandData(lat, lng),
+    fetchWetlandsData(lat, lng),
   ]);
 
-  const result: PropertyIntelligence = { soil, flood, water };
+  const result: PropertyIntelligence = { soil, flood, water, toxics, broadband, wetlands };
   cache.set(key, result);
   return result;
 }
 
-/**
- * Human-readable flood risk level.
- */
+// ---- Display helpers ----
+
 export function floodRiskLevel(zone: string): { label: string; color: string } {
   const z = zone.toUpperCase();
   if (z === 'X' || z === 'AREA OF MINIMAL FLOOD HAZARD') return { label: 'Minimal risk', color: '#16a34a' };
@@ -188,66 +265,24 @@ export function floodRiskLevel(zone: string): { label: string; color: string } {
   return { label: zone, color: '#6b7280' };
 }
 
-/**
- * Human-readable soil capability rating.
- */
-/**
- * Generate research links for a property location.
- * These open external tools pre-filled with the property's coordinates or location.
- */
-export function getResearchLinks(listing: { state: string; county: string; city: string; lat?: number; lng?: number }) {
-  const { state, county, city, lat, lng } = listing;
-  const location = `${city ? city + ', ' : ''}${county ? county + ' County, ' : ''}${state}`;
-
-  return [
-    {
-      category: 'Tax & Property Records',
-      links: [
-        { label: `${county || state} Tax Assessor`, url: `https://www.google.com/search?q=${encodeURIComponent(`${county || ''} county ${state} property tax assessor lookup`)}`, desc: 'County property tax records and assessed values' },
-        { label: 'USDA Property Eligibility', url: `https://eligibility.sc.egov.usda.gov/eligibility/welcomeAction.do`, desc: 'Check USDA rural development loan eligibility' },
-      ],
-    },
-    {
-      category: 'Water & Environmental',
-      links: [
-        { label: 'EPA Water Quality', url: lat && lng ? `https://mywaterway.epa.gov/community/${lat}/${lng}` : `https://mywaterway.epa.gov/community/${encodeURIComponent(location)}`, desc: 'Local waterway health, impairments, and pollution sources' },
-        { label: 'EPA Envirofacts', url: lat && lng ? `https://enviro.epa.gov/enviro/em/locator/index.html?lx=${lng}&ly=${lat}` : `https://enviro.epa.gov/`, desc: 'Toxic releases, Superfund sites, brownfields nearby' },
-        { label: 'USGS Water Resources', url: `https://waterdata.usgs.gov/nwis/uv?search_criteria=lat_long_bounding_box&submitted_form=introduction`, desc: 'Stream gauges, groundwater levels, water quality data' },
-        { label: 'Well Water Quality', url: `https://www.google.com/search?q=${encodeURIComponent(`${county || ''} county ${state} well water quality report`)}`, desc: 'County well water testing and quality reports' },
-      ],
-    },
-    {
-      category: 'Wildlife & Conservation',
-      links: [
-        { label: 'USFWS Wetlands', url: lat && lng ? `https://fwsprimary.wim.usgs.gov/wetlands/apps/wetlands-mapper/?zoom=13&center=${lng},${lat}` : `https://www.fws.gov/program/national-wetlands-inventory/wetlands-mapper`, desc: 'National Wetlands Inventory map' },
-        { label: 'State Wildlife Agency', url: `https://www.google.com/search?q=${encodeURIComponent(`${state} department of fish wildlife game species`)}`, desc: 'Hunting, fishing, and wildlife management info' },
-        { label: 'Endangered Species', url: lat && lng ? `https://ecos.fws.gov/ipac/location/index` : `https://ecos.fws.gov/ipac/`, desc: 'USFWS IPaC threatened and endangered species' },
-      ],
-    },
-    {
-      category: 'Soil & Agriculture',
-      links: [
-        { label: 'Web Soil Survey', url: `https://websoilsurvey.nrcs.usda.gov/app/`, desc: 'Detailed USDA soil maps and reports' },
-        { label: 'Crop History', url: `https://nassgeodata.gmu.edu/CropScape/`, desc: 'USDA CropScape: what crops were grown on this land' },
-        { label: 'Farmland Value', url: `https://www.google.com/search?q=${encodeURIComponent(`${county || ''} county ${state} farmland value per acre ${new Date().getFullYear()}`)}`, desc: 'Local farmland market values' },
-      ],
-    },
-    {
-      category: 'Area Research',
-      links: [
-        { label: 'Broadband Availability', url: `https://broadbandmap.fcc.gov/location-summary/fixed?speed=25_3&latlon=${lat || ''},${lng || ''}`, desc: 'FCC broadband map: internet availability' },
-        { label: 'School Ratings', url: `https://www.google.com/search?q=${encodeURIComponent(`${city || county || ''} ${state} school ratings`)}`, desc: 'Nearby school quality ratings' },
-        { label: 'Crime Statistics', url: `https://www.google.com/search?q=${encodeURIComponent(`${county || ''} county ${state} crime rate statistics`)}`, desc: 'Area crime and safety data' },
-        { label: 'Nearby Hospitals', url: `https://www.google.com/maps/search/hospital+near+${encodeURIComponent(location)}`, desc: 'Hospitals and medical facilities nearby' },
-      ],
-    },
-  ];
-}
-
 export function soilRating(capClass: string): { label: string; color: string } {
   const c = capClass.replace(/[^IViv0-9]/g, '').toUpperCase();
   if (c === 'I' || c === 'II' || c === '1' || c === '2') return { label: 'Prime farmland', color: '#16a34a' };
   if (c === 'III' || c === '3') return { label: 'Good farmland', color: '#65a30d' };
   if (c === 'IV' || c === '4') return { label: 'Fair farmland', color: '#ca8a04' };
   return { label: capClass || 'Unknown', color: '#6b7280' };
+}
+
+/**
+ * Only links that truly require visiting another site (no free API available).
+ */
+export function getExternalLinks(listing: { state: string; county: string; city: string; lat?: number; lng?: number }) {
+  const { state, county, city } = listing;
+  return [
+    { label: `${county || state} Tax Assessor`, url: `https://www.google.com/search?q=${encodeURIComponent(`${county || ''} county ${state} property tax assessor`)}`, desc: 'County property tax records (no unified API exists)' },
+    { label: 'USDA Loan Eligibility', url: 'https://eligibility.sc.egov.usda.gov/eligibility/welcomeAction.do', desc: 'Check USDA rural development loan eligibility' },
+    { label: 'Web Soil Survey (detailed)', url: 'https://websoilsurvey.nrcs.usda.gov/app/', desc: 'Draw your own area for a full USDA soil report' },
+    { label: 'State Wildlife Agency', url: `https://www.google.com/search?q=${encodeURIComponent(`${state} department fish wildlife game hunting`)}`, desc: 'Hunting, fishing, wildlife management' },
+    { label: 'Nearby Hospitals', url: `https://www.google.com/maps/search/hospital+near+${encodeURIComponent(`${city || county || ''}, ${state}`)}`, desc: 'Medical facilities nearby' },
+  ];
 }

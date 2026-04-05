@@ -6,7 +6,7 @@ import {
   fetchPropertyIntelligence,
   floodRiskLevel,
   soilRating,
-  getResearchLinks,
+  getExternalLinks,
   type PropertyIntelligence,
 } from '@/lib/property-intelligence';
 
@@ -32,7 +32,7 @@ export default function ListingDetail({ listing }: { listing: FarmListing }) {
   const currentImage = allImages[imgIndex] || '';
   const hasMultiple = allImages.length > 1;
   const dom = daysOnMarket(listing.dateListed);
-  const researchLinks = getResearchLinks(listing);
+  const externalLinks = getExternalLinks(listing);
 
   // Fetch property intelligence data on mount
   useEffect(() => {
@@ -313,28 +313,133 @@ export default function ListingDetail({ listing }: { listing: FarmListing }) {
               </div>
             )}
 
-            {/* Research Links */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Property Research</h2>
-              <div className="space-y-5">
-                {researchLinks.map((cat) => (
-                  <div key={cat.category}>
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{cat.category}</h3>
-                    <div className="space-y-2">
-                      {cat.links.map((link) => (
-                        <a
-                          key={link.label}
-                          href={link.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block p-3 border border-gray-100 rounded-lg hover:border-green-300 hover:bg-green-50 transition-colors group"
-                        >
-                          <div className="text-sm font-medium text-gray-900 group-hover:text-green-700">{link.label}</div>
-                          <div className="text-xs text-gray-500 mt-0.5">{link.desc}</div>
-                        </a>
+            {/* Environmental & Toxic Sites */}
+            {intel?.toxics && intel.toxics.status === 'loaded' && (
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-3">Nearby Industrial & Toxic Sites</h2>
+                {intel.toxics.sites.length > 0 ? (
+                  <div className="space-y-2">
+                    {intel.toxics.sites.map((site, i) => (
+                      <div key={i} className="flex items-start gap-3 p-3 border border-red-100 bg-red-50 rounded-lg">
+                        <span className="w-2 h-2 rounded-full bg-red-500 mt-1.5 flex-shrink-0" />
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{site.name}</div>
+                          <div className="text-xs text-gray-500">{site.type} ~ {site.distance} away</div>
+                        </div>
+                      </div>
+                    ))}
+                    <p className="text-xs text-gray-400 mt-2">EPA Toxic Release Inventory facilities within ~5 miles</p>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="w-2 h-2 rounded-full bg-green-500" />
+                    <span className="text-gray-700">No toxic release sites found within 5 miles</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Wetlands */}
+            {intel?.wetlands && intel.wetlands.status === 'loaded' && (
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-3">Wetlands</h2>
+                {intel.wetlands.hasWetlands ? (
+                  <div>
+                    <div className="flex items-center gap-2 text-sm mb-2">
+                      <span className="w-2 h-2 rounded-full bg-blue-500" />
+                      <span className="text-gray-700">Wetlands detected at this location</span>
+                    </div>
+                    {intel.wetlands.types.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {intel.wetlands.types.map((t, i) => (
+                          <span key={i} className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs">{t}</span>
+                        ))}
+                      </div>
+                    )}
+                    <p className="text-xs text-gray-400 mt-2">USFWS National Wetlands Inventory. Wetlands may restrict development.</p>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="w-2 h-2 rounded-full bg-green-500" />
+                    <span className="text-gray-700">No wetlands mapped at this location</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Broadband / Internet */}
+            {intel?.broadband && intel.broadband.status === 'loaded' && (
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-3">Internet Availability</h2>
+                {intel.broadband.providers.length > 0 ? (
+                  <div>
+                    <div className="flex items-center gap-4 mb-3">
+                      <div>
+                        <div className="text-lg font-bold text-gray-900">{intel.broadband.maxDown} Mbps</div>
+                        <div className="text-xs text-gray-500">Max download</div>
+                      </div>
+                      <div>
+                        <div className="text-lg font-bold text-gray-900">{intel.broadband.maxUp} Mbps</div>
+                        <div className="text-xs text-gray-500">Max upload</div>
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-500 mb-1">Providers:</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {intel.broadband.providers.map((p, i) => (
+                        <span key={i} className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">{p}</span>
                       ))}
                     </div>
+                    <p className="text-xs text-gray-400 mt-2">FCC Broadband Map data</p>
                   </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="w-2 h-2 rounded-full bg-amber-500" />
+                    <span className="text-gray-700">No broadband providers found at this location</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Data Center Check */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">Nearby Development</h2>
+              <div className="space-y-2">
+                <a
+                  href={`https://www.google.com/search?q=${encodeURIComponent(`"data center" near ${listing.city || listing.county || ''} ${listing.state} planned OR approved OR construction site:*.gov OR site:datacentermap.com`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block p-3 border border-gray-100 rounded-lg hover:border-amber-300 hover:bg-amber-50 transition-colors group"
+                >
+                  <div className="text-sm font-medium text-gray-900 group-hover:text-amber-700">Data Centers Nearby</div>
+                  <div className="text-xs text-gray-500 mt-0.5">Search for planned or existing data centers that could affect property values and water resources</div>
+                </a>
+                <a
+                  href={`https://www.google.com/search?q=${encodeURIComponent(`${listing.county || listing.city || ''} county ${listing.state} zoning changes industrial development ${new Date().getFullYear()}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block p-3 border border-gray-100 rounded-lg hover:border-amber-300 hover:bg-amber-50 transition-colors group"
+                >
+                  <div className="text-sm font-medium text-gray-900 group-hover:text-amber-700">Zoning & Development News</div>
+                  <div className="text-xs text-gray-500 mt-0.5">Recent zoning changes, industrial development, or land use proposals in the area</div>
+                </a>
+              </div>
+            </div>
+
+            {/* External Links (no API available) */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">Additional Resources</h2>
+              <div className="space-y-2">
+                {externalLinks.map((link) => (
+                  <a
+                    key={link.label}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block p-3 border border-gray-100 rounded-lg hover:border-green-300 hover:bg-green-50 transition-colors group"
+                  >
+                    <div className="text-sm font-medium text-gray-900 group-hover:text-green-700">{link.label}</div>
+                    <div className="text-xs text-gray-500 mt-0.5">{link.desc}</div>
+                  </a>
                 ))}
               </div>
             </div>
