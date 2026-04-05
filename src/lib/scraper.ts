@@ -535,13 +535,15 @@ async function fetchHtml(url: string, source: string, state: string): Promise<st
     console.log(`[${source}] ${state}: direct failed (${msg}), trying proxy...`);
   }
 
-  // Fallback to ScraperAPI proxy (no render, 1 credit each)
-  const proxyUrlStr = proxyUrl(url);
+  // Fallback to ScraperAPI proxy
+  // render=true loads JS (gets images) but costs 5x credits
+  const useRender = process.env.SCRAPER_RENDER === 'true';
+  const proxyUrlStr = proxyUrl(url, useRender);
   if (proxyUrlStr === url) return null; // No API key, can't proxy
 
   try {
     const res = await fetch(proxyUrlStr, {
-      signal: AbortSignal.timeout(30000),
+      signal: AbortSignal.timeout(useRender ? 45000 : 30000),
     });
     if (!res.ok) {
       console.log(`[${source}] ${state}: proxy HTTP ${res.status}`);

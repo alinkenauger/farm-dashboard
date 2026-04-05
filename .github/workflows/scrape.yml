@@ -2,12 +2,18 @@ name: Scrape Farm Listings
 
 on:
   schedule:
-    # Daily at 8am ET (12:00 UTC) - rotates 3 states per day
+    # Daily at 8am ET (12:00 UTC) - rotates 3 states, no render (1 credit each)
     - cron: '0 12 * * *'
+    # Weekly Sunday at 6am ET (10:00 UTC) - all states with render (images)
+    - cron: '0 10 * * 0'
   workflow_dispatch:
     inputs:
       all_states:
         description: 'Scrape all states (not just rotation)'
+        type: boolean
+        default: false
+      render:
+        description: 'Use render mode for images (5 credits each)'
         type: boolean
         default: false
 
@@ -31,13 +37,16 @@ jobs:
 
       - name: Run scraper
         run: |
-          if [ "${{ inputs.all_states }}" = "true" ]; then
-            npx tsx scripts/scrape.ts --all
-          else
-            npx tsx scripts/scrape.ts
+          ARGS=""
+          # Weekly Sunday cron or manual all_states = scrape everything
+          if [ "${{ github.event.schedule }}" = "0 10 * * 0" ] || [ "${{ inputs.all_states }}" = "true" ]; then
+            ARGS="--all"
           fi
+          npx tsx scripts/scrape.ts $ARGS
         env:
           SCRAPER_API_KEY: ${{ secrets.SCRAPER_API_KEY }}
+          # Weekly Sunday cron or manual render = enable render mode for images
+          SCRAPER_RENDER: ${{ github.event.schedule == '0 10 * * 0' || inputs.render == 'true' }}
 
       - name: Commit and push listings data
         run: |
