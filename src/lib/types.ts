@@ -49,11 +49,8 @@ export const TARGET_STATES = [
   'Tennessee',
   'Mississippi',
   'Alabama',
-  'Georgia',
   'South Carolina',
-  'Florida',
   'Virginia',
-  'West Virginia',
 ] as const;
 
 export const STATE_ABBREVIATIONS: Record<string, string> = {
@@ -64,9 +61,6 @@ export const STATE_ABBREVIATIONS: Record<string, string> = {
   Tennessee: 'TN',
   Mississippi: 'MS',
   Alabama: 'AL',
-  Georgia: 'GA',
   'South Carolina': 'SC',
-  Florida: 'FL',
   Virginia: 'VA',
-  'West Virginia': 'WV',
 };

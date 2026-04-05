@@ -14,11 +14,8 @@ const STATE_CENTERS: Record<string, [number, number]> = {
   Tennessee: [35.5, -86.6],
   Mississippi: [32.7, -89.5],
   Alabama: [32.8, -86.8],
-  Georgia: [32.7, -83.5],
   'South Carolina': [33.9, -81.0],
-  Florida: [28.7, -82.5],
   Virginia: [37.5, -79.0],
-  'West Virginia': [38.6, -80.6],
 };
 
 function formatPrice(price: number): string {

@@ -2,9 +2,14 @@ name: Scrape Farm Listings
 
 on:
   schedule:
-    # Daily at 8am ET (12:00 UTC)
+    # Daily at 8am ET (12:00 UTC) - rotates 3 states per day
     - cron: '0 12 * * *'
-  workflow_dispatch: # Manual trigger
+  workflow_dispatch:
+    inputs:
+      all_states:
+        description: 'Scrape all states (not just rotation)'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -25,13 +30,16 @@ jobs:
       - run: npm ci
 
       - name: Run scraper
-        run: npx tsx scripts/scrape.ts
+        run: |
+          if [ "${{ inputs.all_states }}" = "true" ]; then
+            npx tsx scripts/scrape.ts --all
+          else
+            npx tsx scripts/scrape.ts
+          fi
         env:
           SCRAPER_API_KEY: ${{ secrets.SCRAPER_API_KEY }}
 
       - name: Commit and push listings data
-        env:
-          COMMIT_DATE: ${{ github.event.repository.updated_at }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
