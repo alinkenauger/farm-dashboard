@@ -102,8 +102,13 @@ function extractImages($: cheerio.CheerioAPI, container: cheerio.Cheerio<any>, b
 function makeListing(
   partial: Partial<FarmListing> & { listingUrl: string; state: string; source: string }
 ): FarmListing {
-  const price = partial.price || 0;
+  let price = partial.price || 0;
   const acreage = partial.acreage || 0;
+
+  // Sanity check: if price equals acreage, it's a parsing error (grabbed acreage as price)
+  if (price > 0 && acreage > 0 && price === acreage) price = 0;
+  // Prices under $10,000 for 200+ acre farms are not real sale prices (likely auctions/leases)
+  if (price > 0 && price < 10000 && acreage >= 200) price = 0;
   return {
     id: partial.id || generateId(partial.source, partial.listingUrl),
     address: partial.address || `Farm in ${partial.state}`,
