@@ -52,12 +52,18 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git pull --rebase origin main
           git add data/listings.json
           if git diff --staged --quiet; then
             echo "No changes to commit"
-          else
-            DATESTAMP=$(date -u +%Y-%m-%d)
-            git commit -m "data: update farm listings ${DATESTAMP}"
-            git push
+            exit 0
           fi
+          DATESTAMP=$(date -u +%Y-%m-%d)
+          git commit -m "data: update farm listings ${DATESTAMP}"
+          # Retry push up to 3 times (handles concurrent pushes)
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push && exit 0
+            echo "Push attempt $i failed, retrying..."
+            sleep 5
+          done
+          echo "Failed to push after 3 attempts"
+          exit 1
