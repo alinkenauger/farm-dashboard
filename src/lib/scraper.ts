@@ -495,10 +495,12 @@ function extractFromHtml(
   return listings;
 }
 
-function proxyUrl(url: string): string {
+function proxyUrl(url: string, render = false): string {
   const apiKey = process.env.SCRAPER_API_KEY;
   if (!apiKey) return url;
-  return `http://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(url)}`;
+  const params = [`api_key=${apiKey}`, `url=${encodeURIComponent(url)}`];
+  if (render) params.push('render=true');
+  return `http://api.scraperapi.com?${params.join('&')}`;
 }
 
 // Direct fetch first, ScraperAPI fallback for blocked requests
@@ -533,7 +535,7 @@ async function fetchHtml(url: string, source: string, state: string): Promise<st
     console.log(`[${source}] ${state}: direct failed (${msg}), trying proxy...`);
   }
 
-  // Fallback to ScraperAPI proxy
+  // Fallback to ScraperAPI proxy (no render, 1 credit each)
   const proxyUrlStr = proxyUrl(url);
   if (proxyUrlStr === url) return null; // No API key, can't proxy
 
@@ -570,6 +572,22 @@ async function fetchAndParse(
       listings = siteParser(html, state);
       if (listings.length === 0) {
         listings = extractFromHtml(html, baseUrl, source, state);
+      } else {
+        // Try to enrich listings that are missing images from __NEXT_DATA__ or JSON-LD
+        const jsonListings = extractFromHtml(html, baseUrl, source, state);
+        if (jsonListings.some(l => l.imageUrl)) {
+          const imageMap = new Map<string, string[]>();
+          for (const jl of jsonListings) {
+            if (jl.images.length > 0) imageMap.set(jl.listingUrl, jl.images);
+          }
+          for (const listing of listings) {
+            if (!listing.imageUrl && imageMap.has(listing.listingUrl)) {
+              const imgs = imageMap.get(listing.listingUrl)!;
+              listing.imageUrl = imgs[0];
+              listing.images = imgs;
+            }
+          }
+        }
       }
     } else {
       listings = extractFromHtml(html, baseUrl, source, state);
