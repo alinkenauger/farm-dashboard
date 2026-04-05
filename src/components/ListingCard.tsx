@@ -219,12 +219,10 @@ export default function ListingCard({ listing, isFavorite, onToggleFavorite, onC
         {/* CTAs */}
         <div className="flex gap-2">
           <a
-            href={listing.listingUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={`/listing/${encodeURIComponent(listing.id)}`}
             className="flex-1 text-center bg-green-700 hover:bg-green-800 text-white py-2 rounded-lg text-sm font-medium transition-colors"
           >
-            View Listing
+            View Details
           </a>
           {onCompare && (
             <button

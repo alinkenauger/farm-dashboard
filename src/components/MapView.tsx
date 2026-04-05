@@ -162,7 +162,7 @@ export default function MapView({ listings, onSelectListing }: MapViewProps) {
           </div>
           ${listing.beds || listing.baths ? `<div style="font-size:11px;color:#555;margin-bottom:8px">${listing.beds}bd / ${listing.baths}ba</div>` : ''}
           <div style="display:flex;gap:6px">
-            <a href="${safeListingUrl}" target="_blank" rel="noopener noreferrer" style="flex:1;text-align:center;background:#15803d;color:white;padding:6px 10px;border-radius:6px;text-decoration:none;font-size:12px;font-weight:600">View Listing</a>
+            <a href="/listing/${encodeURIComponent(listing.id)}" style="flex:1;text-align:center;background:#15803d;color:white;padding:6px 10px;border-radius:6px;text-decoration:none;font-size:12px;font-weight:600">View Details</a>
           </div>
           <div style="font-size:10px;color:#aaa;margin-top:6px;text-align:right">${escapeHtml(listing.source)}</div>
         </div>
