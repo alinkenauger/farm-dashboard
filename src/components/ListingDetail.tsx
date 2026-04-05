@@ -1,7 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FarmListing } from '@/lib/types';
+import {
+  fetchPropertyIntelligence,
+  floodRiskLevel,
+  soilRating,
+  getResearchLinks,
+  type PropertyIntelligence,
+} from '@/lib/property-intelligence';
 
 function formatPrice(price: number): string {
   if (price >= 1_000_000) return `$${(price / 1_000_000).toFixed(2)}M`;
@@ -20,10 +27,30 @@ function daysOnMarket(dateStr: string): number {
 
 export default function ListingDetail({ listing }: { listing: FarmListing }) {
   const [imgIndex, setImgIndex] = useState(0);
+  const [intel, setIntel] = useState<PropertyIntelligence | null>(null);
   const allImages = listing.images?.length > 0 ? listing.images : listing.imageUrl ? [listing.imageUrl] : [];
   const currentImage = allImages[imgIndex] || '';
   const hasMultiple = allImages.length > 1;
   const dom = daysOnMarket(listing.dateListed);
+  const researchLinks = getResearchLinks(listing);
+
+  // Fetch property intelligence data on mount
+  useEffect(() => {
+    if (listing.lat && listing.lng) {
+      fetchPropertyIntelligence(listing.lat, listing.lng).then(setIntel);
+    } else {
+      // Use state center as approximate location for API queries
+      const STATE_CENTERS: Record<string, [number, number]> = {
+        Kentucky: [37.8, -85.7], Missouri: [38.5, -92.3], Arkansas: [34.7, -92.3],
+        Illinois: [40.0, -89.4], Tennessee: [35.5, -86.6], Mississippi: [32.7, -89.5],
+        Alabama: [32.8, -86.8], 'South Carolina': [33.9, -81.0], Virginia: [37.5, -79.0],
+      };
+      const center = STATE_CENTERS[listing.state];
+      if (center) {
+        fetchPropertyIntelligence(center[0], center[1]).then(setIntel);
+      }
+    }
+  }, [listing]);
 
   const lastPriceChange = listing.priceHistory.length > 1
     ? listing.priceHistory[listing.priceHistory.length - 1]
@@ -203,6 +230,114 @@ export default function ListingDetail({ listing }: { listing: FarmListing }) {
                 </div>
               </div>
             )}
+
+            {/* Property Intelligence */}
+            {intel && (
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Land Intelligence</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {/* Soil */}
+                  <div className="border border-gray-100 rounded-lg p-4">
+                    <div className="text-xs text-gray-500 uppercase tracking-wide mb-2">Soil</div>
+                    {intel.soil?.status === 'loading' ? (
+                      <div className="text-sm text-gray-400">Loading...</div>
+                    ) : intel.soil?.status === 'loaded' ? (
+                      <>
+                        <div className="text-sm font-medium text-gray-900 mb-1">{intel.soil.name}</div>
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: soilRating(intel.soil.capabilityClass).color }} />
+                          <span className="text-xs text-gray-600">{soilRating(intel.soil.capabilityClass).label}</span>
+                        </div>
+                        <div className="text-xs text-gray-500">Drainage: {intel.soil.drainageClass}</div>
+                        {intel.soil.farmlandClass && (
+                          <div className="text-xs text-gray-500 mt-1">{intel.soil.farmlandClass}</div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-sm text-gray-400">Unavailable</div>
+                    )}
+                  </div>
+
+                  {/* Flood */}
+                  <div className="border border-gray-100 rounded-lg p-4">
+                    <div className="text-xs text-gray-500 uppercase tracking-wide mb-2">Flood Risk</div>
+                    {intel.flood?.status === 'loading' ? (
+                      <div className="text-sm text-gray-400">Loading...</div>
+                    ) : intel.flood?.status === 'loaded' ? (
+                      <>
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: floodRiskLevel(intel.flood.zone).color }} />
+                          <span className="text-sm font-medium text-gray-900">{floodRiskLevel(intel.flood.zone).label}</span>
+                        </div>
+                        <div className="text-xs text-gray-500">FEMA Zone {intel.flood.zone}</div>
+                        {intel.flood.zoneSubtype && (
+                          <div className="text-xs text-gray-500 mt-1">{intel.flood.zoneSubtype}</div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-sm text-gray-400">Unavailable</div>
+                    )}
+                  </div>
+
+                  {/* Water Quality */}
+                  <div className="border border-gray-100 rounded-lg p-4">
+                    <div className="text-xs text-gray-500 uppercase tracking-wide mb-2">Water Quality</div>
+                    {intel.water?.status === 'loading' ? (
+                      <div className="text-sm text-gray-400">Loading...</div>
+                    ) : intel.water?.status === 'loaded' ? (
+                      <>
+                        {intel.water.violations > 0 ? (
+                          <>
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <span className="w-2 h-2 rounded-full bg-red-500" />
+                              <span className="text-sm font-medium text-red-700">{intel.water.violations} violation{intel.water.violations !== 1 ? 's' : ''}</span>
+                            </div>
+                            <div className="text-xs text-gray-500">{intel.water.facilities} facilit{intel.water.facilities !== 1 ? 'ies' : 'y'} within 3 miles</div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <span className="w-2 h-2 rounded-full bg-green-500" />
+                              <span className="text-sm font-medium text-gray-900">No violations</span>
+                            </div>
+                            <div className="text-xs text-gray-500">No CWA violations within 3 miles</div>
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-sm text-gray-400">Unavailable</div>
+                    )}
+                  </div>
+                </div>
+                <p className="text-xs text-gray-400 mt-3">Data from USDA, FEMA, and EPA. Based on approximate property location.</p>
+              </div>
+            )}
+
+            {/* Research Links */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Property Research</h2>
+              <div className="space-y-5">
+                {researchLinks.map((cat) => (
+                  <div key={cat.category}>
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{cat.category}</h3>
+                    <div className="space-y-2">
+                      {cat.links.map((link) => (
+                        <a
+                          key={link.label}
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block p-3 border border-gray-100 rounded-lg hover:border-green-300 hover:bg-green-50 transition-colors group"
+                        >
+                          <div className="text-sm font-medium text-gray-900 group-hover:text-green-700">{link.label}</div>
+                          <div className="text-xs text-gray-500 mt-0.5">{link.desc}</div>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Sidebar */}
