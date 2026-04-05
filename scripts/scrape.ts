@@ -11,17 +11,19 @@ import { TARGET_STATES, FarmListing } from '../src/lib/types';
 import { writeFileSync, readFileSync, mkdirSync, existsSync } from 'fs';
 import { join } from 'path';
 
-// Rotate 3 states per day. With 9 states, full cycle every 3 days.
-// Pass --all flag to scrape all states at once (initial load).
+// Rotate 2 states per day. With 9 states, full cycle every ~5 days.
+// Pass --all flag to scrape all states at once (weekly render).
+// Budget: daily 2x4=8 credits/day + weekly 9x4x5=180 credits = ~928/month
 function getTodaysStates(): string[] {
   if (process.argv.includes('--all')) {
     console.log('--all flag: scraping all states');
     return [...TARGET_STATES];
   }
   const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
-  const rotation = dayOfYear % 3; // 0, 1, or 2
-  const start = rotation * 3;
-  return [...TARGET_STATES].slice(start, start + 3);
+  const allStates = [...TARGET_STATES];
+  const start = (dayOfYear * 2) % allStates.length;
+  // Grab 2 states, wrapping around
+  return [allStates[start], allStates[(start + 1) % allStates.length]];
 }
 
 async function main() {
