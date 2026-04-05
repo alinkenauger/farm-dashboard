@@ -32,7 +32,15 @@ interface ListingCardProps {
 
 export default function ListingCard({ listing, isFavorite, onToggleFavorite, onCompare }: ListingCardProps) {
   const [imgIndex, setImgIndex] = useState(0);
-  const allImages = listing.images?.length > 0 ? listing.images : listing.imageUrl ? [listing.imageUrl] : [];
+  // Use listing images if available, otherwise show satellite view of the area
+  const satelliteFallback = listing.lat && listing.lng
+    ? `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox=${listing.lng - 0.01},${listing.lat - 0.007},${listing.lng + 0.01},${listing.lat + 0.007}&size=600,400&f=image&format=jpg`
+    : '';
+  const allImages = listing.images?.length > 0
+    ? listing.images
+    : listing.imageUrl
+      ? [listing.imageUrl]
+      : satelliteFallback ? [satelliteFallback] : [];
   const currentImage = allImages[imgIndex] || '';
   const hasMultiple = allImages.length > 1;
 

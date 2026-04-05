@@ -28,7 +28,15 @@ function daysOnMarket(dateStr: string): number {
 export default function ListingDetail({ listing }: { listing: FarmListing }) {
   const [imgIndex, setImgIndex] = useState(0);
   const [intel, setIntel] = useState<PropertyIntelligence | null>(null);
-  const allImages = listing.images?.length > 0 ? listing.images : listing.imageUrl ? [listing.imageUrl] : [];
+  // Use listing images if available, otherwise show satellite view of the area
+  const satelliteFallback = listing.lat && listing.lng
+    ? `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox=${listing.lng - 0.015},${listing.lat - 0.01},${listing.lng + 0.015},${listing.lat + 0.01}&size=800,400&f=image&format=jpg`
+    : '';
+  const allImages = listing.images?.length > 0
+    ? listing.images
+    : listing.imageUrl
+      ? [listing.imageUrl]
+      : satelliteFallback ? [satelliteFallback] : [];
   const currentImage = allImages[imgIndex] || '';
   const hasMultiple = allImages.length > 1;
   const dom = daysOnMarket(listing.dateListed);
