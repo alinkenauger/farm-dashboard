@@ -111,8 +111,11 @@ export default function MapView({ listings, onSelectListing }: MapViewProps) {
       if (!lat || !lng) {
         const center = STATE_CENTERS[listing.state];
         if (!center) continue;
-        lat = center[0] + (Math.random() - 0.5) * 2;
-        lng = center[1] + (Math.random() - 0.5) * 2;
+        // Use a seeded offset based on listing ID so pins stay stable across renders
+        // but don't all stack on the same point. ~0.3 degree = ~20 miles spread.
+        const hash = listing.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+        lat = center[0] + ((hash % 100) / 100 - 0.5) * 0.6;
+        lng = center[1] + (((hash * 7) % 100) / 100 - 0.5) * 0.6;
         isApproximate = true;
       }
 
