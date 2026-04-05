@@ -5,7 +5,6 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { FarmListing } from '@/lib/types';
 
-// State center coordinates for listings without lat/lng
 const STATE_CENTERS: Record<string, [number, number]> = {
   Kentucky: [37.8, -85.7],
   Missouri: [38.5, -92.3],
@@ -41,65 +40,55 @@ interface MapViewProps {
 export default function MapView({ listings, onSelectListing }: MapViewProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
+  const markersRef = useRef<L.Marker[]>([]);
   const [tileMode, setTileMode] = useState<'street' | 'satellite'>('street');
+  const tileModeRef = useRef(tileMode);
 
   const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
-  const handlePinClick = useCallback((listing: FarmListing) => {
-    onSelectListing?.(listing);
-  }, [onSelectListing]);
-
+  // Initialize map once
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || mapInstanceRef.current) return;
 
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.remove();
-      mapInstanceRef.current = null;
-    }
-
-    const map = L.map(mapRef.current, {
-      zoomControl: true,
-    }).setView([35.5, -86.5], 5);
+    const map = L.map(mapRef.current, { zoomControl: true }).setView([35.5, -86.5], 5);
     mapInstanceRef.current = map;
 
-    // Street tiles (default, always available)
     const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors',
     });
 
-    // Satellite tiles (Mapbox if token available, ESRI free otherwise)
     const satelliteLayer = MAPBOX_TOKEN
       ? L.tileLayer(
           `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`,
-          {
-            attribution: '&copy; Mapbox &copy; OpenStreetMap',
-            tileSize: 512,
-            zoomOffset: -1,
-          }
+          { attribution: '&copy; Mapbox', tileSize: 512, zoomOffset: -1 }
         )
       : L.tileLayer(
           'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-          {
-            attribution: '&copy; Esri, Maxar, Earthstar Geographics',
-          }
+          { attribution: '&copy; Esri' }
         );
 
-    // Add the current tile mode
-    if (tileMode === 'satellite') {
-      satelliteLayer.addTo(map);
-    } else {
-      streetLayer.addTo(map);
+    streetLayer.addTo(map);
+    L.control.layers({ 'Street': streetLayer, 'Satellite': satelliteLayer }, {}, { position: 'topright' }).addTo(map);
+
+    return () => {
+      map.remove();
+      mapInstanceRef.current = null;
+    };
+  }, [MAPBOX_TOKEN]);
+
+  // Update markers when listings change (without recreating the map)
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    // Clear old markers
+    for (const m of markersRef.current) {
+      map.removeLayer(m);
     }
+    markersRef.current = [];
 
-    // Layer control
-    L.control.layers(
-      { 'Street': streetLayer, 'Satellite': satelliteLayer },
-      {},
-      { position: 'topright' }
-    ).addTo(map);
-
-    // Add markers
-    const markers: L.Marker[] = [];
+    // Add new markers
+    const newMarkers: L.Marker[] = [];
     for (const listing of listings) {
       let lat = listing.lat;
       let lng = listing.lng;
@@ -108,8 +97,6 @@ export default function MapView({ listings, onSelectListing }: MapViewProps) {
       if (!lat || !lng) {
         const center = STATE_CENTERS[listing.state];
         if (!center) continue;
-        // Use a seeded offset based on listing ID so pins stay stable across renders
-        // but don't all stack on the same point. ~0.3 degree = ~20 miles spread.
         const hash = listing.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
         lat = center[0] + ((hash % 100) / 100 - 0.5) * 0.6;
         lng = center[1] + (((hash * 7) % 100) / 100 - 0.5) * 0.6;
@@ -117,23 +104,12 @@ export default function MapView({ listings, onSelectListing }: MapViewProps) {
       }
 
       const priceText = listing.price > 0 ? formatPrice(listing.price) : 'N/A';
-
-      // 44px circular pin with price
       const icon = L.divIcon({
         html: `<div style="
-          background:#15803d;
-          color:white;
-          width:44px;
-          height:44px;
-          border-radius:50%;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          font-size:10px;
-          font-weight:700;
-          border:2px solid white;
-          box-shadow:0 2px 6px rgba(0,0,0,0.3);
-          cursor:pointer;
+          background:#15803d;color:white;width:44px;height:44px;border-radius:50%;
+          display:flex;align-items:center;justify-content:center;
+          font-size:10px;font-weight:700;border:2px solid white;
+          box-shadow:0 2px 6px rgba(0,0,0,0.3);cursor:pointer;
           ${isApproximate ? 'opacity:0.7;' : ''}
         ">${priceText}</div>`,
         className: '',
@@ -143,7 +119,6 @@ export default function MapView({ listings, onSelectListing }: MapViewProps) {
 
       const marker = L.marker([lat, lng], { icon });
 
-      // Popup with listing info
       const safeAddress = escapeHtml(listing.address);
       const safeCity = escapeHtml(listing.city || '');
       const safeState = escapeHtml(listing.state);
@@ -168,24 +143,19 @@ export default function MapView({ listings, onSelectListing }: MapViewProps) {
         </div>
       `);
 
-      marker.on('click', () => handlePinClick(listing));
+      marker.on('click', () => onSelectListing?.(listing));
       marker.addTo(map);
-      markers.push(marker);
+      newMarkers.push(marker);
     }
 
-    // Fit bounds
-    if (markers.length > 0) {
-      const group = L.featureGroup(markers);
-      map.fitBounds(group.getBounds().pad(0.1));
-    }
+    markersRef.current = newMarkers;
 
-    return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
-    };
-  }, [listings, tileMode, MAPBOX_TOKEN, handlePinClick]);
+    // Zoom to fit the filtered listings
+    if (newMarkers.length > 0) {
+      const group = L.featureGroup(newMarkers);
+      map.flyToBounds(group.getBounds().pad(0.1), { duration: 0.5 });
+    }
+  }, [listings, onSelectListing]);
 
   return (
     <div className="relative">
@@ -194,7 +164,6 @@ export default function MapView({ listings, onSelectListing }: MapViewProps) {
         className="w-full rounded-xl overflow-hidden border border-gray-200 shadow-sm"
         style={{ height: '700px' }}
       />
-      {/* Tile mode toggle */}
       <div className="absolute top-3 left-3 z-[1000] flex bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
         <button
           onClick={() => setTileMode('street')}
@@ -209,7 +178,6 @@ export default function MapView({ listings, onSelectListing }: MapViewProps) {
           Satellite
         </button>
       </div>
-      {/* Listing count badge */}
       <div className="absolute bottom-3 left-3 z-[1000] bg-white/90 backdrop-blur-sm rounded-lg px-3 py-1.5 shadow-md border border-gray-200 text-xs font-medium text-gray-700">
         {listings.length} farms
       </div>
