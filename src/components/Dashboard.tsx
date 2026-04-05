@@ -43,6 +43,7 @@ export default function Dashboard() {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [compareList, setCompareList] = useState<FarmListing[]>([]);
   const [showCompare, setShowCompare] = useState(false);
+  const [selectedListing, setSelectedListing] = useState<FarmListing | null>(null);
   const [filters, setFilters] = useState<FilterState>({
     search: '',
     states: [],
@@ -334,7 +335,25 @@ export default function Dashboard() {
         {/* Content */}
         {filteredListings.length > 0 ? (
           viewMode === 'map' ? (
-            <MapView listings={filteredListings} />
+            <div className="relative flex gap-0">
+              <div className={`${selectedListing ? 'w-2/3' : 'w-full'} transition-all duration-300`}>
+                <MapView listings={filteredListings} onSelectListing={setSelectedListing} />
+              </div>
+              {selectedListing && (
+                <div className="w-1/3 min-w-[340px] max-w-[420px] bg-white border-l border-gray-200 rounded-r-xl overflow-y-auto" style={{ height: '700px' }}>
+                  <div className="sticky top-0 bg-white border-b border-gray-100 px-4 py-2 flex items-center justify-between z-10">
+                    <span className="text-xs font-medium text-gray-500">Property Details</span>
+                    <button onClick={() => setSelectedListing(null)} className="text-gray-400 hover:text-gray-600 text-lg leading-none">&times;</button>
+                  </div>
+                  <ListingCard
+                    listing={selectedListing}
+                    isFavorite={favorites.has(selectedListing.id)}
+                    onToggleFavorite={toggleFavorite}
+                    onCompare={toggleCompare}
+                  />
+                </div>
+              )}
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredListings.map((listing) => (
